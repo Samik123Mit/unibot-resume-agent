@@ -1,0 +1,96 @@
+{
+  "personal": {
+    "name": "Alex Johnson",
+    "email": "alex.johnson@email.com",
+    "phone": "+1 (415) 555-0192",
+    "location": "San Francisco, CA",
+    "linkedin": "linkedin.com/in/alexjohnson",
+    "website": "alexjohnson.dev"
+  },
+  "summary": "Software engineer with 5 years of experience building scalable backend systems and APIs. Passionate about clean architecture and developer tooling. Strong collaborator with a track record of shipping features that improve user engagement.",
+  "experiences": [
+    {
+      "id": "exp_1",
+      "title": "Senior Software Engineer",
+      "company": "TechCorp Inc.",
+      "location": "San Francisco, CA",
+      "start_date": "Jan 2022",
+      "end_date": "Present",
+      "bullets": [
+        "Led migration of monolithic payment service to microservices architecture, reducing latency by 40%.",
+        "Mentored 3 junior engineers through weekly 1:1s and code reviews, improving team velocity by 20%.",
+        "Designed and shipped REST API serving 2M+ daily active users with 99.9% uptime.",
+        "Collaborated with product and design teams to define technical requirements for 5 major features."
+      ]
+    },
+    {
+      "id": "exp_2",
+      "title": "Software Engineer",
+      "company": "StartupXYZ",
+      "location": "Remote",
+      "start_date": "Jun 2019",
+      "end_date": "Dec 2021",
+      "bullets": [
+        "Built real-time notification system using WebSockets handling 500K concurrent connections.",
+        "Reduced infrastructure costs by 30% by optimizing database queries and introducing caching layer.",
+        "Developed internal analytics dashboard used by 50+ team members to track KPIs."
+      ]
+    }
+  ],
+  "educations": [
+    {
+      "id": "edu_1",
+      "degree": "B.S. Computer Science",
+      "institution": "University of California, Berkeley",
+      "location": "Berkeley, CA",
+      "start_date": "Aug 2015",
+      "end_date": "May 2019",
+      "gpa": "3.7",
+      "highlights": [
+        "Dean's List — Fall 2017, Spring 2018",
+        "Capstone: Distributed key-value store with Raft consensus"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "id": "skill_1",
+      "category": "Languages",
+      "items": ["Python", "Go", "TypeScript", "SQL"]
+    },
+    {
+      "id": "skill_2",
+      "category": "Frameworks & Tools",
+      "items": ["FastAPI", "Django", "React", "Docker", "Kubernetes"]
+    },
+    {
+      "id": "skill_3",
+      "category": "Databases",
+      "items": ["PostgreSQL", "Redis", "MongoDB"]
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj_1",
+      "name": "OpenTrace",
+      "description": "Open-source distributed tracing library for Python microservices.",
+      "technologies": ["Python", "gRPC", "OpenTelemetry"],
+      "bullets": [
+        "Achieved 1,200+ GitHub stars within 3 months of launch.",
+        "Integrated with 4 major APM platforms via plugin architecture."
+      ],
+      "url": "github.com/alexjohnson/opentrace"
+    },
+    {
+      "id": "proj_2",
+      "name": "DevDash",
+      "description": "Developer productivity dashboard aggregating PRs, issues, and CI/CD status.",
+      "technologies": ["React", "TypeScript", "Node.js", "GitHub API"],
+      "bullets": [
+        "Used by 200+ developers across 15 companies.",
+        "Built plugin system allowing custom data source integrations."
+      ],
+      "url": "github.com/alexjohnson/devdash"
+    }
+  ]
+}
