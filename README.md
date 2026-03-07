@@ -27,7 +27,7 @@
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/unibot-resume-agent.git
+git clone https://github.com/Samik123Mit/unibot-resume-agent
 cd unibot-resume-agent
 ```
 
