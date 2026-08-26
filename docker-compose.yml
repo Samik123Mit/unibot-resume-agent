@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    ports: ["8000:8000"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://unibot:change-this-in-production@db:5432/unibot
+    depends_on: [db]
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: unibot
+      POSTGRES_PASSWORD: change-this-in-production
+      POSTGRES_DB: unibot
+    volumes: [postgres_data:/var/lib/postgresql/data]
+volumes:
+  postgres_data:

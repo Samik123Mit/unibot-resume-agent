@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: unibot-resume-agent
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unibot-postgres
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 10080
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: LLM_API_BASE
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        sync: false
+    disk:
+      name: unibot-pdf-storage
+      mountPath: /var/data
+      sizeGB: 1
+databases:
+  - name: unibot-postgres
+    plan: basic-256mb

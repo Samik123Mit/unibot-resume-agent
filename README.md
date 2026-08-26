@@ -1,349 +1,136 @@
 # Unibot Resume Agent
 
-> AI-powered resume editing assistant built with Google Agent Development Kit (ADK).
-> Natural language → structured resume edits via a multi-agent hierarchy.
+Unibot is an AI-assisted placement-CV studio that imports an existing resume, preserves its PDF appearance, evaluates job relevance transparently, proposes contextual edits, and regenerates an approved PDF revision.
 
----
+> Live application: **deployment pending provider credentials**. This line will be replaced with the verified production URL after deployment.
 
-## Table of Contents
+## Product capabilities
 
-- [Quick Start](#quick-start)
-- [How to Change the Resume JSON](#how-to-change-the-resume-json)
-- [Agent Hierarchy](#agent-hierarchy)
-- [Tool List & Purpose](#tool-list--purpose)
-- [Sample Test Queries](#sample-test-queries)
-- [Prompt Design](#prompt-design)
-- [Project Structure](#project-structure)
+- One-click guest workspace plus JWT registration/login APIs.
+- PDF, DOCX, TXT, and JSON resume import.
+- Exact PDF-page rendering with selectable text overlays.
+- Whole-line click selection or character-level drag selection.
+- Local Ollama development model or any OpenAI-compatible hosted model.
+- Clarifying questions for vague prompts.
+- Proposal-first workflow: AI suggestions never alter the source until explicitly approved.
+- PDF replacement that preserves bold styling where detected.
+- Whole-CV commands such as `Add PostgreSQL to skills` with section routing.
+- Download, undo, reset-to-original, and revision history.
+- Transparent ATS-readiness formula with BM25 relevance, evidence quality, and structural checks.
+- ATS missing-term suggestions staged for review before any source-PDF update.
+- Multi-tenant SQL persistence: SQLite locally and PostgreSQL in production.
 
----
+## ATS methodology
 
-## Quick Start
+No universal “ATS score” exists because hiring platforms use proprietary parsers and ranking configurations. Unibot reports a reproducible **ATS-readiness estimate**:
 
-### Prerequisites
+| Component | Weight | Purpose |
+|---|---:|---|
+| BM25 job relevance | 70% | Saturated term relevance between the CV and job description |
+| Evidence quality | 20% | Action-led and quantified achievement lines |
+| Resume structure | 10% | Presence of education, experience, skills, and projects |
 
-- Python 3.10+
-- A Google Gemini API key — get one free at https://aistudio.google.com/app/apikey
+The relevance component follows Robertson and Zaragoza’s BM25 framework. Occupation and skills terminology references the U.S. Department of Labor-sponsored O*NET content model. These sources are also linked inside every UI report.
 
-### 1. Clone the repo
+- [The Probabilistic Relevance Framework: BM25 and Beyond](https://doi.org/10.1561/1500000019)
+- [O*NET Content Model](https://www.onetcenter.org/content.html)
 
-```bash
-git clone https://github.com/Samik123Mit/unibot-resume-agent
+## Architecture
+
+```mermaid
+flowchart LR
+    B[Browser CV Studio] -->|JWT + JSON/multipart| API[FastAPI]
+    API --> DB[(PostgreSQL)]
+    API --> FS[(Persistent PDF storage)]
+    API --> AI[Ollama locally / hosted LLM]
+    API --> ATS[BM25 + evidence analyzer]
+    API --> PDF[PyMuPDF revision engine]
+    PDF --> FS
+    FS --> B
+```
+
+Detailed architecture, security boundaries, state transitions, and failure modes are documented in [docs/MASTER_DOCUMENT.md](docs/MASTER_DOCUMENT.md).
+
+## Local development
+
+Requirements: Python 3.12+ and optionally Ollama with `llama3:latest`.
+
+```powershell
+git clone https://github.com/Samik123Mit/unibot-resume-agent.git
 cd unibot-resume-agent
-```
-
-### 2. Create and activate a virtual environment
-
-```bash
+Copy-Item .env.example .env
 python -m venv .venv
-
-# macOS / Linux
-source .venv/bin/activate
-
-# Windows CMD
-.venv\Scripts\activate.bat
-
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-```
-
-### 3. Install dependencies
-
-```bash
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8001
 ```
 
-### 4. Add your API key
+Open `http://127.0.0.1:8001`.
 
-Edit the `.env` file in the project root:
+Run tests:
 
-```
-GOOGLE_API_KEY=your_google_api_key_here
-```
-
-### 5. Run the agent
-
-**Web interface (recommended):**
-```bash
-adk web
-```
-Open [http://localhost:8000](http://localhost:8000) → select **unibot** from the agent dropdown → start chatting.
-
-**CLI interface:**
-```bash
-adk run unibot_resume
+```powershell
+pytest -q
 ```
 
----
+## Environment variables
 
-## How to Change the Resume JSON
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | Production | SQLAlchemy URL; use PostgreSQL in deployment |
+| `JWT_SECRET` | Production | Long random signing secret |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | No | Session lifetime; default `10080` |
+| `UPLOAD_DIR` | Production | Persistent mounted directory for PDF revisions |
+| `LLM_API_BASE` | Cloud AI | OpenAI-compatible API base URL |
+| `LLM_API_KEY` | Cloud AI | Provider secret; never expose to the browser |
+| `LLM_MODEL` | Cloud AI | Hosted model identifier |
+| `OLLAMA_MODEL` | Local only | Defaults to `llama3:latest` |
 
-> **To use your own resume, edit `unibot_resume/resume_data.json` and restart the agent.**
+The server falls back to local Ollama when hosted-provider variables are absent. A cloud deployment must configure a hosted model because it cannot reach a developer machine’s Ollama service.
 
-The file is loaded once at startup into an in-memory dict. All agents read and write from that dict via tools.
+## Deployment
 
-### Resume JSON Schema
+The repository includes:
 
-```json
-{
-  "personal": {
-    "name": "string",
-    "email": "string",
-    "phone": "string",
-    "location": "string",
-    "linkedin": "string",
-    "website": "string"
-  },
-  "summary": "string — 3-5 sentence professional summary",
-  "experiences": [
-    {
-      "id": "exp_1",
-      "title": "string",
-      "company": "string",
-      "location": "string",
-      "start_date": "string",
-      "end_date": "string",
-      "bullets": ["string"]
-    }
-  ],
-  "educations": [
-    {
-      "id": "edu_1",
-      "degree": "string",
-      "institution": "string",
-      "location": "string",
-      "start_date": "string",
-      "end_date": "string",
-      "gpa": "string",
-      "highlights": ["string"]
-    }
-  ],
-  "skills": [
-    {
-      "id": "skill_1",
-      "category": "string",
-      "items": ["string"]
-    }
-  ],
-  "projects": [
-    {
-      "id": "proj_1",
-      "name": "string",
-      "description": "string",
-      "technologies": ["string"],
-      "bullets": ["string"],
-      "url": "string"
-    }
-  ]
-}
-```
+- `Dockerfile` for deterministic container builds.
+- `render.yaml` for a web service, managed PostgreSQL, and persistent PDF disk.
+- `.github/workflows/ci.yml` for automated tests.
+- `docker-compose.yml` for local PostgreSQL integration.
 
-**ID convention:** `exp_N`, `edu_N`, `skill_N`, `proj_N` — keep them unique within each section. The agents use these IDs to target specific entries.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for rollout, secrets, smoke tests, backups, and rollback.
 
----
+## API overview
 
-## Agent Hierarchy
+| Area | Endpoints |
+|---|---|
+| Session | `/api/auth/guest`, `/api/auth/register`, `/api/auth/login`, `/api/me` |
+| Resumes | `/api/resumes`, `/api/resumes/import`, `/api/resumes/{id}` |
+| AI review | `/selection-edit`, `/apply-selection`, `/command` |
+| ATS | `/ats` |
+| PDF | `/preview`, `/pdf-layout`, `/pdf-page/{page}` |
+| Recovery | `/undo`, `/reset`, `/revisions` |
 
-```
-unibot  (root agent)
-│
-│  Handles: greetings, general career Q&A, routing resume edit requests
-│
-└── resume_agent  (Resume Sub-Agent)
-    │
-    │  Handles: section identification, routes to correct section agent
-    │
-    ├── summary_agent       — rewrites / refines the professional summary
-    ├── experiences_agent   — add/edit/remove bullets, update job fields
-    ├── educations_agent    — update degree, GPA, dates, highlights
-    ├── skills_agent        — add/remove skills, manage categories
-    └── projects_agent      — add/remove projects, edit descriptions/bullets
-```
+Interactive OpenAPI documentation is available at `/docs` while the API runs.
 
-### How routing works
+## Test status
 
-1. **Unibot** receives every message. It answers general career questions directly (interview prep, salary negotiation, job search, etc.). If the message involves any resume edit, it delegates to `resume_agent`.
+The suite covers tenant isolation, ATS output, proposal/approval behavior, vague-prompt clarification, exact PDF replacement, whole-CV PDF updates, and bold-style preservation. See [docs/TESTING.md](docs/TESTING.md) for the complete matrix.
 
-2. **resume_agent** identifies which section is targeted from the user's phrasing and delegates to the correct section agent. It does not edit the resume itself.
+## Safety and limitations
 
-3. **Section agents** call read tools first, apply the change via write tools, and confirm the result to the user. Each agent only has access to tools for its own section — it cannot accidentally touch other sections.
+- Missing ATS keywords should be added only when they truthfully represent the candidate.
+- The original PDF and extracted source text are retained for recovery.
+- Scanned PDFs without a text layer require OCR before exact replacement.
+- A substantially longer replacement can overflow the original text box; concise suggestions are preferred.
+- Hosted production AI requires a server-side provider key.
 
----
+## Documentation
 
-## Tool List & Purpose
+- [Master technical document](docs/MASTER_DOCUMENT.md)
+- [System architecture](docs/ARCHITECTURE.md)
+- [Testing strategy and cases](docs/TESTING.md)
+- [Deployment and operations](docs/DEPLOYMENT.md)
 
-All tools live in `unibot_resume/tools/`. They operate on a single global `RESUME` dict loaded from `resume_data.json` at startup.
+## License
 
-### Read Tools (`tools/read_tools.py`)
-
-| Tool | Purpose |
-|------|---------|
-| `get_resume()` | Returns the full resume dict |
-| `get_section(section_name)` | Returns one section by name (`summary`, `experiences`, `educations`, `skills`, `projects`) |
-
-### Write Tools (`tools/write_tools.py`)
-
-#### Summary
-
-| Tool | Purpose |
-|------|---------|
-| `update_summary(text)` | Replace the entire summary string |
-
-#### Experiences
-
-| Tool | Purpose |
-|------|---------|
-| `get_experience_ids()` | List all experiences with their IDs, titles, and companies |
-| `add_experience_bullet(exp_id, bullet)` | Append a new bullet to an experience |
-| `update_experience_bullet(exp_id, index, bullet)` | Replace bullet at 0-based index |
-| `remove_experience_bullet(exp_id, index)` | Remove bullet at 0-based index |
-| `update_experience_fields(exp_id, ...)` | Update title / company / location / dates |
-| `add_experience(title, company, ...)` | Add a brand-new experience entry |
-| `remove_experience(exp_id)` | Delete an experience entirely |
-
-#### Educations
-
-| Tool | Purpose |
-|------|---------|
-| `get_education_ids()` | List all education entries with IDs |
-| `update_education_fields(edu_id, ...)` | Update degree / school / GPA / dates |
-| `add_education_highlight(edu_id, text)` | Add an honor or academic highlight |
-| `remove_education_highlight(edu_id, index)` | Remove highlight at 0-based index |
-
-#### Skills
-
-| Tool | Purpose |
-|------|---------|
-| `get_skills()` | Return all skills grouped by category |
-| `add_skill(skill, category)` | Add a skill; creates category if it doesn't exist |
-| `remove_skill(skill)` | Remove skill by name (case-insensitive) |
-| `move_skill_to_category(skill, category)` | Move a skill to a different category |
-
-#### Projects
-
-| Tool | Purpose |
-|------|---------|
-| `get_project_ids()` | List all projects with IDs and names |
-| `update_project_description(proj_id, text)` | Rewrite the short project description |
-| `add_project_bullet(proj_id, bullet)` | Append a bullet/achievement to a project |
-| `update_project_bullet(proj_id, index, bullet)` | Replace bullet at 0-based index |
-| `add_project(name, description, technologies, ...)` | Add a new project entry |
-| `remove_project(proj_id)` | Delete a project entirely |
-| `update_project_fields(proj_id, ...)` | Update project name / technologies / URL |
-
-Every write tool validates inputs before touching the resume dict and returns `{"status": "success" | "error", "message": "..."}`. Invalid inputs (empty strings, bad IDs, out-of-range indices) return an error without corrupting the schema.
-
----
-
-## Sample Test Queries
-
-### Summary
-```
-Make my summary more senior
-Rewrite my summary for leadership roles
-Shorten my summary to 2 sentences
-Tailor my summary for a machine learning engineer role
-```
-
-### Experiences
-```
-Add a leadership bullet to my first experience
-Improve my first job bullets for impact
-Add a bullet about cross-team collaboration to my second job
-Update my title at TechCorp to Staff Engineer
-Add a new experience at Google as a Software Engineer starting Jan 2024
-```
-
-### Skills
-```
-Add Python to my skills
-Add PyTorch to a new Machine Learning category
-Remove MongoDB from my skills
-Add Rust to Languages
-```
-
-### Projects
-```
-Remove my second project
-Add a project about an AI chatbot built with LangChain and FastAPI
-Improve the description of my first project
-Add a bullet about user growth to DevDash
-```
-
-### Education
-```
-Update my GPA to 3.9
-Add Phi Beta Kappa as an honor to my education
-Update my graduation year to 2020
-```
-
-### General career Q&A (handled by Unibot directly, no delegation)
-```
-How do I prepare for a system design interview?
-What is a good summary length for an entry-level resume?
-How do I negotiate a higher salary?
-What should I put on my resume if I have no work experience?
-```
-
----
-
-## Prompt Design
-
-### Core philosophy: tight scope + forced tool usage
-
-**1. Minimal tool authority per agent**
-Each section agent is given only the tools for its own section. The summary agent cannot call `add_skill()`; the skills agent cannot touch bullets. This makes over-editing structurally impossible, not just instructed against.
-
-**2. Tool-forcing language**
-Every section agent's system prompt explicitly states:
-- `"ALWAYS call get_section(...) first to read current content before editing"`
-- `"ALWAYS call [write tool] to save edits — never just describe what you'd write"`
-
-This eliminates the common LLM failure mode of narrating a change without actually executing it.
-
-**3. Ordinal resolution before writing**
-Experience and project agents are instructed to always call `get_experience_ids()` / `get_project_ids()` first, then map "first job" → `exp_1`, "second project" → `proj_2`. This prevents off-by-one errors when the user references entries positionally.
-
-**4. Routing tables in prompts**
-Both `unibot` and `resume_agent` include explicit keyword → agent routing tables (e.g. "summary / bio / intro → summary_agent"). This makes common-case routing deterministic while the LLM still handles edge cases gracefully.
-
-**5. Minimal edit principle**
-Section agent prompts explicitly say: *"Only edit what the user requests. Do not alter unrelated bullets, fields, or sections."* This prevents agents from helpfully over-rewriting content the user didn't ask to change.
-
-**6. Confirmation after every write**
-Every agent is instructed to show the updated content to the user after saving. This creates a visible feedback loop so the user can immediately catch and correct anything unexpected.
-
----
-
-## Project Structure
-
-```
-unibot_resume/
-├── agent.py                  # root_agent (Unibot) — ADK entry point
-├── resume_state.py           # loads resume_data.json → global RESUME dict
-├── resume_data.json          # ← EDIT THIS to change the resume
-├── requirements.txt
-├── .env                      # GOOGLE_API_KEY goes here (not committed)
-├── tools/
-│   ├── __init__.py
-│   ├── read_tools.py         # get_resume, get_section
-│   └── write_tools.py        # all mutation tools
-└── sub_agents/
-    ├── __init__.py
-    ├── resume_agent.py       # section router
-    ├── summary_agent.py
-    ├── experiences_agent.py
-    ├── educations_agent.py
-    ├── skills_agent.py
-    └── projects_agent.py
-```
-
----
-
-## Tech Stack
-
-| Component | Choice |
-|-----------|--------|
-| Agent framework | Google ADK (`google-adk`) |
-| LLM | Gemini 2.0 Flash |
-| Resume store | In-memory dict loaded from JSON |
-| Language | Python 3.10+ |
+No open-source license has been selected. All rights remain with the repository owner until a license is added.
