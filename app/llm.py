@@ -25,10 +25,10 @@ def rewrite(selected_text: str, instruction: str) -> str:
     try:
         return _complete(f"Instruction: {instruction}\n\nRewrite only this selected resume text:\n{selected_text}")
     except Exception as exc:
-        raise RuntimeError(f"Local AI model is unavailable: {exc}") from exc
+        raise RuntimeError(f"AI provider is unavailable or rejected the request: {exc}") from exc
 
 def edit_resume(raw_text: str, instruction: str) -> str:
     try:
         return _complete(f"Instruction: {instruction}\n\nEdit the correct section of this resume. Return the complete resume, preserving every unrelated line exactly:\n\n{raw_text}")
     except Exception as exc:
-        raise RuntimeError(f"Local AI model is unavailable: {exc}") from exc
+        raise RuntimeError(f"AI provider is unavailable or rejected the request: {exc}") from exc

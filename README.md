@@ -2,7 +2,7 @@
 
 Unibot is an AI-assisted placement-CV studio that imports an existing resume, preserves its PDF appearance, evaluates job relevance transparently, proposes contextual edits, and regenerates an approved PDF revision.
 
-> Live application: **deployment pending provider authorization and hosted-model credentials**. This line will be replaced with the verified production URL after deployment.
+> Live application: **[https://unibot-resume-agent.onrender.com](https://unibot-resume-agent.onrender.com)**
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Samik123Mit/unibot-resume-agent)
 
