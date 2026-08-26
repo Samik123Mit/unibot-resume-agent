@@ -3,6 +3,7 @@ services:
     name: unibot-resume-agent
     runtime: docker
     plan: starter
+    autoDeployTrigger: checksPass
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
