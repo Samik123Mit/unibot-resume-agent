@@ -95,7 +95,7 @@ The server falls back to local Ollama when hosted-provider variables are absent.
 The repository includes:
 
 - `Dockerfile` for deterministic container builds.
-- `render.yaml` for a web service, managed PostgreSQL, and persistent PDF disk.
+- `render.yaml` for a free demo web service and free Render PostgreSQL.
 - `.github/workflows/ci.yml` for automated tests.
 - `docker-compose.yml` for local PostgreSQL integration.
 
@@ -125,6 +125,7 @@ The suite covers tenant isolation, ATS output, proposal/approval behavior, vague
 - Scanned PDFs without a text layer require OCR before exact replacement.
 - A substantially longer replacement can overflow the original text box; concise suggestions are preferred.
 - Hosted production AI requires a server-side provider key.
+- The free Render demo uses temporary PDF storage; uploaded files disappear on service restart/spin-down. Free Render PostgreSQL expires after 30 days.
 
 ## Documentation
 

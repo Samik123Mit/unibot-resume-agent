@@ -2,7 +2,9 @@
 
 ## Recommended production target
 
-The included `render.yaml` defines a Docker web service, managed PostgreSQL, persistent disk mounted at `/var/data`, generated JWT secret, and `/api/health` checks.
+The included `render.yaml` defines a free Docker web service, free Render PostgreSQL, temporary `/tmp` PDF storage, a generated JWT secret, and `/api/health` checks.
+
+This configuration is intended for portfolio/demo use. Render free web services cannot attach persistent disks, so uploaded PDFs disappear after restart, redeploy, or idle spin-down. Free Render PostgreSQL expires after 30 days. Upgrade the web service and add a disk—or use object storage—for durable production data.
 
 ## Required hosted-model secrets
 
@@ -21,7 +23,7 @@ Never commit `.env` or expose these values to the browser.
 1. Push the repository to GitHub.
 2. In Render, choose **New → Blueprint**.
 3. Select `Samik123Mit/unibot-resume-agent`.
-4. Review the PostgreSQL and persistent-disk plans in `render.yaml`.
+4. Confirm both the web service and PostgreSQL show the Free instance type and that no persistent disk is listed.
 5. Enter the hosted-model secret values.
 6. Apply the blueprint.
 7. Wait for `/api/health` to become healthy.
@@ -53,7 +55,7 @@ docker compose up --build
 - [ ] Hosted model credentials configured.
 - [ ] PostgreSQL connection healthy.
 - [ ] `JWT_SECRET` generated, not default.
-- [ ] Persistent `UPLOAD_DIR` mounted.
+- [ ] `UPLOAD_DIR=/tmp/uploads` accepted for demo use, or durable storage configured for production.
 - [ ] HTTPS enabled.
 - [ ] CI green on deployed commit.
 - [ ] PDF upload/edit/download smoke test passed.

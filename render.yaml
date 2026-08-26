@@ -2,7 +2,7 @@ services:
   - type: web
     name: unibot-resume-agent
     runtime: docker
-    plan: starter
+    plan: free
     autoDeployTrigger: checksPass
     healthCheckPath: /api/health
     envVars:
@@ -15,17 +15,13 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: 10080
       - key: UPLOAD_DIR
-        value: /var/data/uploads
+        value: /tmp/uploads
       - key: LLM_API_BASE
         sync: false
       - key: LLM_API_KEY
         sync: false
       - key: LLM_MODEL
         sync: false
-    disk:
-      name: unibot-pdf-storage
-      mountPath: /var/data
-      sizeGB: 1
 databases:
   - name: unibot-postgres
-    plan: basic-256mb
+    plan: free
