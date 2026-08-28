@@ -53,6 +53,86 @@ flowchart LR
 
 Detailed architecture, security boundaries, state transitions, and failure modes are documented in [docs/MASTER_DOCUMENT.md](docs/MASTER_DOCUMENT.md).
 
+## Prototype Multi-Agent Architecture
+
+The repository also contains a separate **prototype multi-agent resume-editing layer**. This is useful to discuss in interviews, but it is **not the runtime currently wired into the deployed FastAPI app**.
+
+```mermaid
+flowchart TD
+    U[User Request] --> A[Root Agent<br/>agent.py]
+    A -->|resume edit request| R[Resume Manager Agent<br/>resume_agent.py]
+    A -->|general career question| G[Direct response]
+    R --> S1[Summary Agent<br/>summary_agent.py]
+    R --> S2[Experiences Agent<br/>experiences_agent.py]
+    R --> S3[Educations Agent<br/>educations_agent.py]
+    R --> S4[Skills Agent<br/>skills_agent.py]
+    R --> S5[Projects Agent<br/>projects_agent.py]
+    S1 --> RT[Read Tools<br/>read_tools.py]
+    S2 --> RT
+    S3 --> RT
+    S4 --> RT
+    S5 --> RT
+    S1 --> WT[Write Tools<br/>write_tools.py]
+    S2 --> WT
+    S3 --> WT
+    S4 --> WT
+    S5 --> WT
+    RT --> RS[Shared Resume State<br/>resume_state.py + resume_data.json]
+    WT --> RS
+```
+
+### How the agent hierarchy is intended to work
+
+- **Root agent**: [agent.py](agent.py)
+  - Entry point for the Google ADK-style assistant.
+  - Handles broad career questions directly.
+  - Delegates resume-editing requests to the resume manager agent.
+
+- **Resume manager agent**: [resume_agent.py](resume_agent.py)
+  - Acts as the router for resume-specific requests.
+  - Decides whether the user wants to edit the summary, experience, education, skills, or projects.
+  - Delegates the task to the correct section agent.
+
+- **Summary agent**: [summary_agent.py](summary_agent.py)
+  - Reads the current summary.
+  - Rewrites or refines only the summary.
+  - Saves changes through a write tool.
+
+- **Experiences agent**: [experiences_agent.py](experiences_agent.py)
+  - Handles work experience bullets and metadata.
+  - Can add, edit, or remove bullets.
+  - Can update title, company, location, and dates.
+  - Can add or remove entire experience entries.
+
+- **Educations agent**: [educations_agent.py](educations_agent.py)
+  - Handles degree, institution, location, dates, GPA, and highlights.
+  - Makes scoped education-only changes.
+
+- **Skills agent**: [skills_agent.py](skills_agent.py)
+  - Manages skill categories and individual skills.
+  - Can add a skill, remove a skill, or move a skill between categories.
+
+- **Projects agent**: [projects_agent.py](projects_agent.py)
+  - Handles project descriptions, bullets, technologies, URLs, and project add/remove operations.
+
+### Agent tools and state
+
+- **Read tools**: [read_tools.py](read_tools.py)
+  - Expose `get_resume()` and `get_section()`.
+  - Let agents inspect current resume state before editing.
+
+- **Write tools**: [write_tools.py](write_tools.py)
+  - Contain the actual mutation functions.
+  - Examples include `update_summary`, `add_skill`, `remove_skill`, `add_experience_bullet`, `update_education_fields`, and `add_project`.
+
+- **Shared state**: [resume_state.py](resume_state.py) and [resume_data.json](resume_data.json)
+  - Load a single in-memory resume object from JSON.
+  - All prototype agents operate on this shared state.
+
+### Important implementation note
+
+The agent files show the intended **multi-agent architecture**, but the deployed product currently runs through [app/main.py](app/main.py) and does not invoke this hierarchy. Also, the agent files import `unibot_resume...` package paths that are not present in the current repo layout, so this layer should be treated as a prototype design unless it is restructured and integrated.
+
 ## Local development
 
 Requirements: Python 3.12+ and optionally Ollama with `llama3:latest`.
